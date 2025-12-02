@@ -107,10 +107,14 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
 
     let boneRefsType = ''
     if (options.bones && bones.length > 0) {
-      boneRefsType = `\n
+      // Only include root bones in BoneRefs (bones without bone parents)
+      const rootBones = bones.filter((o) => !(o.parent && o.parent.isBone))
+      if (rootBones.length > 0) {
+        boneRefsType = `\n
   type BoneRefs = {
-    ${bones.map(({ name }) => (isVarName(name) ? name : `['${name}']`) + ': THREE.Bone | null').join(',')}
+    ${rootBones.map(({ name }) => (isVarName(name) ? name : `['${name}']`) + ': THREE.Bone | null').join(',')}
   }\n`
+      }
     }
 
     const types = [...new Set([...meshes, ...bones].map((o) => getType(o)))]
