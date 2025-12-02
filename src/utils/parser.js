@@ -94,7 +94,7 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
 
   function printTypes(objects, animations) {
     let meshes = objects.filter((o) => o.isMesh && o.__removed === undefined)
-    let bones = objects.filter((o) => o.isBone && !(o.parent && o.parent.isBone) && o.__removed === undefined)
+    let bones = objects.filter((o) => o.isBone && o.__removed === undefined)
     let materials = [...new Set(objects.filter((o) => o.material && o.material.name).map((o) => o.material))]
 
     let animationTypes = ''
