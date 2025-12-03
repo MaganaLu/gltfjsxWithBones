@@ -9,7 +9,9 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
     gltf = { scene: gltf, animations: [], parser: { json: {} } }
   }
 
-  const url = (fileName.toLowerCase().startsWith('http') ? '' : '/') + fileName
+  const url = options.publicPath
+    ? (options.publicPath.endsWith('/') ? options.publicPath : options.publicPath + '/') + fileName.split('/').pop()
+    : (fileName.toLowerCase().startsWith('http') ? '' : '/') + fileName
   const animations = gltf.animations
   const hasAnimations = animations.length > 0
 
@@ -498,7 +500,7 @@ ${parseExtras(gltf.parser.json.asset && gltf.parser.json.asset.extras)}*/`
             ? `
         const context = React.createContext(${options.types ? '{} as ContextType' : ''})
 
-        export function Instances({ children, ...props }${options.types ? ': JSX.IntrinsicElements["group"]' : ''}) {
+        export function Instances({ children, ...props }${options.types ? ": React.ComponentProps<'group'>" : ''}) {
           const { nodes } = useGLTF('${url}'${options.draco ? `, ${JSON.stringify(options.draco)}` : ''})${
             options.types ? ' as GLTFResult' : ''
           }
@@ -519,13 +521,13 @@ ${parseExtras(gltf.parser.json.asset && gltf.parser.json.asset.extras)}*/`
             : ''
         }
 
-        export ${options.exportdefault ? 'default' : ''} ${
+        export default ${
           allBones.length > 0
-            ? `const Model = React.forwardRef${options.types ? `<BoneRefs, JSX.IntrinsicElements['group']>` : ''}((props, ref) => {`
-            : `function Model(props${options.types ? ": JSX.IntrinsicElements['group']" : ''}) {`
+            ? `React.forwardRef${options.types ? `<any, React.ComponentProps<'group'>>` : ''}((props, ref) => {`
+            : `function Model(props${options.types ? ": React.ComponentProps<'group'>" : ''}) {`
         }
           ${hasInstances ? 'const instances = React.useContext(context);' : ''} ${
-            hasAnimations || allBones.length > 0 ? `const group = ${options.types ? 'React.useRef<THREE.Group>()' : 'React.useRef()'};` : ''
+            hasAnimations || allBones.length > 0 ? `const group = ${options.types ? 'React.useRef<THREE.Group>(null!)' : 'React.useRef()'};` : ''
           } ${
             !options.instanceall
               ? `const { ${!hasPrimitives ? `nodes, materials` : 'scene'} ${hasAnimations ? ', animations' : ''}} = useGLTF('${url}'${
@@ -533,7 +535,7 @@ ${parseExtras(gltf.parser.json.asset && gltf.parser.json.asset.extras)}*/`
                 })${!hasPrimitives && options.types ? ' as GLTFResult' : ''}${
                   hasPrimitives
                     ? `\nconst clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene])
-                const { nodes, materials } = useGraph(clone) ${options.types ? ' as GLTFResult' : ''}`
+                const { nodes, materials } = useGraph(clone) ${options.types ? ' as unknown as GLTFResult' : ''}`
                     : ''
                 }`
               : ''

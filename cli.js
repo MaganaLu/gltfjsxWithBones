@@ -26,6 +26,7 @@ const cli = meow(
     --precision, -p     Number of fractional digits (default: 3)
     --draco, -d         Draco binary path
     --root, -r          Sets directory from which .gltf file is served
+    --public-path       Public path for model URL (e.g., /models/)
     --instance, -i      Instance re-occuring geometry
     --instanceall, -I   Instance every geometry (for cheaper re-use)
     --exportdefault, -E Use default export
@@ -54,6 +55,7 @@ const cli = meow(
       precision: { type: 'number', shortFlag: 'p', default: 3 },
       draco: { type: 'string', shortFlag: 'd' },
       root: { type: 'string', shortFlag: 'r' },
+      publicPath: { type: 'string' },
       instance: { type: 'boolean', shortFlag: 'i' },
       instanceall: { type: 'boolean', shortFlag: 'I' },
       transform: { type: 'boolean', shortFlag: 'T' },
