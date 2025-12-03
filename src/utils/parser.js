@@ -107,9 +107,12 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
 
     let boneRefsType = ''
     if (options.bones && bones.length > 0) {
+      const hasActions = animations.length > 0
       boneRefsType = `\n
   type BoneRefs = {
     ${bones.map(({ name }) => (isVarName(name) ? name : `['${name}']`) + ': THREE.Bone | null').join(',')}
+    ${hasActions ? 'actions: Record<ActionName, THREE.AnimationAction | null>' : ''}
+    updateMatrixWorld: () => void
   }\n`
     }
 
@@ -522,7 +525,7 @@ ${parseExtras(gltf.parser.json.asset && gltf.parser.json.asset.extras)}*/`
             : `function Model(props${options.types ? ": JSX.IntrinsicElements['group']" : ''}) {`
         }
           ${hasInstances ? 'const instances = React.useContext(context);' : ''} ${
-            hasAnimations ? `const group = ${options.types ? 'React.useRef<THREE.Group>()' : 'React.useRef()'};` : ''
+            hasAnimations || allBones.length > 0 ? `const group = ${options.types ? 'React.useRef<THREE.Group>()' : 'React.useRef()'};` : ''
           } ${
             !options.instanceall
               ? `const { ${!hasPrimitives ? `nodes, materials` : 'scene'} ${hasAnimations ? ', animations' : ''}} = useGLTF('${url}'${
@@ -555,12 +558,18 @@ ${parseExtras(gltf.parser.json.asset && gltf.parser.json.asset.extras)}*/`
                 const refName = isVarName(bone.name) ? bone.name : bone.name.replace(/[^a-zA-Z0-9_]/g, '_')
                 return `${refName}: boneRefs.${refName}.current`
               })
-              .join(',\n            ')}
-          }), [])`
+              .join(',\n            ')}${allBones.length > 0 ? ',' : ''}
+            ${hasAnimations ? 'actions,' : ''}
+            updateMatrixWorld: () => {
+              if (group.current) {
+                group.current.updateMatrixWorld(true)
+              }
+            }
+          }), [${hasAnimations ? 'actions' : ''}])`
               : ''
           }
           return (
-            <group ${hasAnimations ? `ref={group}` : ''} {...props} dispose={null}>
+            <group ${hasAnimations || allBones.length > 0 ? `ref={group}` : ''} {...props} dispose={null}>
         ${scene}
             </group>
           )
