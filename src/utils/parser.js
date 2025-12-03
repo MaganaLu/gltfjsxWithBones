@@ -111,7 +111,7 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
       boneRefsType = `\n
   type BoneRefs = {
     ${bones.map(({ name }) => (isVarName(name) ? name : `['${name}']`) + ': THREE.Bone | null').join(',')}
-    ${hasActions ? 'actions: Record<ActionName, THREE.AnimationAction | null>' : ''}
+    ${hasActions ? 'actions: any' : ''}
     updateMatrixWorld: () => void
   }\n`
     }
