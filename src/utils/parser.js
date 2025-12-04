@@ -9,9 +9,21 @@ function parse(gltf, { fileName = 'model', ...options } = {}) {
     gltf = { scene: gltf, animations: [], parser: { json: {} } }
   }
 
-  const url = options.publicPath
-    ? (options.publicPath.endsWith('/') ? options.publicPath : options.publicPath + '/') + fileName.split('/').pop()
-    : (fileName.toLowerCase().startsWith('http') ? '' : '/') + fileName
+  // Generate proper public path for the model
+  let url
+  if (options.publicPath) {
+    // Extract just the filename (with extension)
+    const basename = fileName.split('/').pop()
+    // Ensure publicPath ends with /
+    const publicPath = options.publicPath.endsWith('/') ? options.publicPath : options.publicPath + '/'
+    url = publicPath + basename
+  } else if (fileName.toLowerCase().startsWith('http')) {
+    // If it's already a URL, use as-is
+    url = fileName
+  } else {
+    // Default: prepend / to the fileName
+    url = '/' + fileName
+  }
   const animations = gltf.animations
   const hasAnimations = animations.length > 0
 
